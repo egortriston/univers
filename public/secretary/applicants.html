@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Абитуриенты - Секретарь</title>
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+
+<body>
+    <nav class="navbar">
+        <div class="navbar-content">
+            <div class="navbar-brand">Приемная комиссия</div>
+            <ul class="navbar-menu">
+                <li><a href="/secretary/dashboard.html">Дашборд</a></li>
+                <li><a href="/secretary/applicants.html">Абитуриенты</a></li>
+                <li><a href="/secretary/groups.html">Экзамены</a></li>
+                <li><a href="/secretary/settings.html">Настройки</a></li>
+            </ul>
+            <div class="navbar-user">
+                <span id="user-name"></span>
+                <button class="edit-btn" onclick="logout()" title="Выход" style="color: white;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path
+                            d="M9 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V5C3 4.46957 3.21071 3.96086 3.58579 3.58579C3.96086 3.21071 4.46957 3 5 3H9"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                        <path d="M16 17L21 12L16 7" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                            stroke-linejoin="round" />
+                        <path d="M21 12H9" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                            stroke-linejoin="round" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="d-flex justify-between align-center mb-3">
+            <h1>Управление абитуриентами</h1>
+            <button class="btn btn-primary" onclick="openAddModal()">Добавить абитуриента</button>
+        </div>
+
+        <div class="card mb-3">
+            <div class="form-group">
+                <label class="form-label">Поиск</label>
+                <input type="text" class="form-control" id="search-input" placeholder="Поиск по ФИО или email...">
+            </div>
+            <div class="d-flex gap-2">
+                <div class="form-group" style="flex: 1;">
+                    <label class="form-label">Статус</label>
+                    <select class="form-control" id="status-filter">
+                        <option value="">Все</option>
+                        <option value="registered">Зарегистрирован</option>
+                        <option value="admitted">Зачислен</option>
+                        <option value="rejected">Не зачислен</option>
+                    </select>
+                </div>
+                <div class="form-group" style="flex: 1;">
+                    <label class="form-label">Специальность</label>
+                    <select class="form-control" id="specialty-filter">
+                        <option value="">Все</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>ФИО</th>
+                        <th>Дата рождения</th>
+                        <th>Специальность</th>
+                        <th>Дата подачи</th>
+                        <th>Статус</th>
+                        <th>Редактировать</th>
+                    </tr>
+                </thead>
+                <tbody id="applicants-table">
+                    <tr>
+                        <td colspan="7" class="text-center loading">Загрузка...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Модальное окно с баллами -->
+    <div id="scores-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="scores-modal-title">Баллы абитуриента</h2>
+                <button class="modal-close" onclick="closeScoresModal()">&times;</button>
+            </div>
+            <div id="scores-content">
+                <div class="loading">Загрузка...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно добавления/редактирования -->
+    <div id="applicant-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="modal-title">Добавить абитуриента</h2>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <form id="applicant-form">
+                <input type="hidden" id="applicant-id">
+                <div class="form-group">
+                    <label class="form-label">Имя *</label>
+                    <input type="text" class="form-control" id="first-name" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Фамилия *</label>
+                    <input type="text" class="form-control" id="last-name" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Отчество</label>
+                    <input type="text" class="form-control" id="middle-name">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Дата рождения *</label>
+                    <input type="date" class="form-control" id="birth-date" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Паспортные данные *</label>
+                    <input type="text" class="form-control" id="passport-data" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Адрес *</label>
+                    <textarea class="form-control" id="address" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Телефон</label>
+                    <input type="tel" class="form-control" id="phone">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Email *</label>
+                    <input type="email" class="form-control" id="email" required>
+                </div>
+                <div class="form-group" id="password-group">
+                    <label class="form-label">Пароль *</label>
+                    <input type="password" class="form-control" id="password" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Специальность *</label>
+                    <select class="form-control" id="specialty-id" required>
+                        <option value="">Выберите специальность</option>
+                    </select>
+                </div>
+                <div class="form-group" id="status-group">
+                    <label class="form-label">Статус</label>
+                    <select class="form-control" id="status">
+                        <option value="registered">Зарегистрирован</option>
+                        <option value="admitted">Зачислен</option>
+                        <option value="rejected">Не зачислен</option>
+                    </select>
+                </div>
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary">Сохранить</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeModal()">Отмена</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="/js/api.js"></script>
+    <script src="/js/auth.js"></script>
+    <script>
+        let applicants = [];
+        let specialties = [];
+
+        checkAuth().then(user => {
+            if (!user || !user.is_secretary) {
+                window.location.href = '/';
+                return;
+            }
+            document.getElementById('user-name').textContent = user.name;
+            loadSpecialties();
+            loadApplicants();
+        });
+
+        async function loadSpecialties() {
+            try {
+                specialties = await API.getSpecialties();
+                const select = document.getElementById('specialty-filter');
+                const modalSelect = document.getElementById('specialty-id');
+
+                specialties.forEach(spec => {
+                    const option1 = new Option(spec.name, spec.id);
+                    const option2 = new Option(spec.name, spec.id);
+                    select.appendChild(option1);
+                    modalSelect.appendChild(option2);
+                });
+            } catch (error) {
+                console.error('Ошибка при загрузке специальностей:', error);
+            }
+        }
+
+        async function loadApplicants() {
+            try {
+                const status = document.getElementById('status-filter').value;
+                const specialtyId = document.getElementById('specialty-filter').value;
+                const search = document.getElementById('search-input').value;
+
+                const params = {};
+                if (status) params.status = status;
+                if (specialtyId) params.specialty_id = specialtyId;
+                if (search) params.search = search;
+
+                applicants = await API.getApplicants(params);
+                renderApplicants();
+            } catch (error) {
+                console.error('Ошибка при загрузке абитуриентов:', error);
+                alert('Ошибка при загрузке данных');
+            }
+        }
+
+        function renderApplicants() {
+            const tbody = document.getElementById('applicants-table');
+            if (applicants.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center">Нет данных</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = applicants.map(applicant => `
+        <tr>
+          <td>${applicant.id}</td>
+          <td>${applicant.last_name} ${applicant.first_name} ${applicant.middle_name || ''}</td>
+          <td>${new Date(applicant.birth_date).toLocaleDateString('ru-RU')}</td>
+          <td>${applicant.specialty_name} (${applicant.specialty_code})</td>
+          <td>${new Date(applicant.application_date).toLocaleDateString('ru-RU')}</td>
+          <td><span class="status-badge status-${applicant.status}">${getStatusText(applicant.status)}</span></td>
+          <td style="text-align: center;">
+            <button class="edit-btn" onclick="showScores(${applicant.id})" title="Редактировать">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M11 4H4C3.46957 4 2.96086 4.21071 2.58579 4.58579C2.21071 4.96086 2 5.46957 2 6V20C2 20.5304 2.21071 21.0391 2.58579 21.4142C2.96086 21.7893 3.46957 22 4 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M18.5 2.50023C18.8978 2.10243 19.4374 1.87891 20 1.87891C20.5626 1.87891 21.1022 2.10243 21.5 2.50023C21.8978 2.89804 22.1213 3.43762 22.1213 4.00023C22.1213 4.56284 21.8978 5.10243 21.5 5.50023L12 15.0002L8 16.0002L9 12.0002L18.5 2.50023Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
+          </td>
+        </tr>
+      `).join('');
+        }
+
+        function getStatusText(status) {
+            const statuses = {
+                'registered': 'Зарегистрирован',
+                'admitted': 'Зачислен',
+                'rejected': 'Не зачислен'
+            };
+            return statuses[status] || status;
+        }
+
+        // Показать модальное окно с баллами
+        async function showScores(id) {
+            const modal = document.getElementById('scores-modal');
+            const content = document.getElementById('scores-content');
+            const applicant = applicants.find(a => a.id === id);
+
+            if (!applicant) return;
+
+            modal.classList.add('active');
+            content.innerHTML = '<div class="loading">Загрузка...</div>';
+
+            try {
+                const data = await API.getApplicant(id);
+                const totalScore = data.exams.reduce((sum, exam) => {
+                    return sum + (exam.score || 0);
+                }, 0);
+
+                content.innerHTML = `
+                    <div class="mb-3">
+                        <h3>${data.applicant.last_name} ${data.applicant.first_name} ${data.applicant.middle_name || ''}</h3>
+                        <p><strong>Специальность:</strong> ${data.applicant.specialty_name} (${data.applicant.specialty_code})</p>
+                    </div>
+
+                    <div class="mb-3">
+                        <h3>Результаты экзаменов</h3>
+                        ${data.exams.length === 0 ? '<p>Нет экзаменов</p>' : `
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Предмет</th>
+                                        <th>Дата</th>
+                                        <th>Аудитория</th>
+                                        <th>Балл</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${data.exams.map(exam => `
+                                        <tr>
+                                            <td>${exam.subject_name}</td>
+                                            <td>${new Date(exam.exam_date).toLocaleString('ru-RU')}</td>
+                                            <td>${exam.room_number || '-'}</td>
+                                            <td><strong>${exam.score !== null ? exam.score : '-'}</strong></td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        `}
+                    </div>
+
+                    <div class="card" style="background-color: #f8f9fa; padding: 1.5rem; text-align: center;">
+                        <div style="font-size: 1.5rem; color: #666; margin-bottom: 0.5rem;">Суммарный балл</div>
+                        <div style="font-size: 3rem; font-weight: bold; color: var(--primary-color);">
+                            ${totalScore}
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2 mt-3">
+                        <button class="btn btn-secondary" onclick="closeScoresModal()">Закрыть</button>
+                        <button class="btn btn-primary" onclick="editApplicantFromScores(${id})">Редактировать данные</button>
+                    </div>
+                `;
+            } catch (error) {
+                content.innerHTML = '<p class="alert alert-error">Ошибка при загрузке данных</p>';
+            }
+        }
+
+        function closeScoresModal() {
+            document.getElementById('scores-modal').classList.remove('active');
+        }
+
+        function editApplicantFromScores(id) {
+            closeScoresModal();
+            editApplicant(id);
+        }
+
+        // Закрытие модального окна при клике вне его
+        document.getElementById('scores-modal').addEventListener('click', (e) => {
+            if (e.target.id === 'scores-modal') {
+                closeScoresModal();
+            }
+        });
+
+        function editApplicant(id) {
+            const applicant = applicants.find(a => a.id === id);
+            if (!applicant) return;
+
+            document.getElementById('modal-title').textContent = 'Редактировать абитуриента';
+            document.getElementById('applicant-id').value = id;
+            document.getElementById('password-group').style.display = 'none';
+            document.getElementById('password').required = false;
+            document.getElementById('status-group').style.display = 'block';
+
+            loadApplicantDetails(id);
+            document.getElementById('applicant-modal').classList.add('active');
+        }
+
+        async function loadApplicantDetails(id) {
+            try {
+                const data = await API.getApplicant(id);
+                const a = data.applicant;
+
+                document.getElementById('first-name').value = a.first_name;
+                document.getElementById('last-name').value = a.last_name;
+                document.getElementById('middle-name').value = a.middle_name || '';
+                document.getElementById('birth-date').value = a.birth_date;
+                document.getElementById('passport-data').value = a.passport_data;
+                document.getElementById('address').value = a.address;
+                document.getElementById('phone').value = a.phone || '';
+                document.getElementById('email').value = a.email || '';
+                document.getElementById('specialty-id').value = a.specialty_id;
+                document.getElementById('status').value = a.status;
+            } catch (error) {
+                alert('Ошибка при загрузке данных абитуриента');
+            }
+        }
+
+        function openAddModal() {
+            document.getElementById('modal-title').textContent = 'Добавить абитуриента';
+            document.getElementById('applicant-form').reset();
+            document.getElementById('applicant-id').value = '';
+            document.getElementById('password-group').style.display = 'block';
+            document.getElementById('password').required = true;
+            document.getElementById('status-group').style.display = 'none';
+            document.getElementById('applicant-modal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('applicant-modal').classList.remove('active');
+        }
+
+
+        document.getElementById('applicant-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const id = document.getElementById('applicant-id').value;
+            const data = {
+                first_name: document.getElementById('first-name').value,
+                last_name: document.getElementById('last-name').value,
+                middle_name: document.getElementById('middle-name').value,
+                birth_date: document.getElementById('birth-date').value,
+                passport_data: document.getElementById('passport-data').value,
+                address: document.getElementById('address').value,
+                phone: document.getElementById('phone').value,
+                email: document.getElementById('email').value,
+                specialty_id: parseInt(document.getElementById('specialty-id').value),
+                status: document.getElementById('status').value
+            };
+
+            if (document.getElementById('password').value) {
+                data.password = document.getElementById('password').value;
+            }
+
+            try {
+                if (id) {
+                    await API.updateApplicant(id, data);
+                } else {
+                    await API.createApplicant(data);
+                }
+                closeModal();
+                loadApplicants();
+            } catch (error) {
+                alert('Ошибка: ' + error.message);
+            }
+        });
+
+        // Фильтры
+        document.getElementById('status-filter').addEventListener('change', loadApplicants);
+        document.getElementById('specialty-filter').addEventListener('change', loadApplicants);
+        document.getElementById('search-input').addEventListener('input', debounce(loadApplicants, 500));
+
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+    </script>
+</body>
+
+</html>

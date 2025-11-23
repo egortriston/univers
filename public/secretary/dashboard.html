@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Дашборд - Секретарь</title>
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+
+<body>
+    <nav class="navbar">
+        <div class="navbar-content">
+            <div class="navbar-brand">Приемная комиссия</div>
+            <ul class="navbar-menu">
+                <li><a href="/secretary/dashboard.html">Дашборд</a></li>
+                <li><a href="/secretary/applicants.html">Абитуриенты</a></li>
+                <li><a href="/secretary/groups.html">Экзамены</a></li>
+                <li><a href="/secretary/settings.html">Настройки</a></li>
+            </ul>
+            <div class="navbar-user">
+                <span id="user-name"></span>
+                <button class="edit-btn" onclick="logout()" title="Выход" style="color: white;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path
+                            d="M9 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V5C3 4.46957 3.21071 3.96086 3.58579 3.58579C3.96086 3.21071 4.46957 3 5 3H9"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                        <path d="M16 17L21 12L16 7" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                            stroke-linejoin="round" />
+                        <path d="M21 12H9" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                            stroke-linejoin="round" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <h1>Дашборд</h1>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-value" id="applications-count">-</div>
+                <div class="stat-label">Поданных заявлений</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="admitted-count">-</div>
+                <div class="stat-label">Зачисленных абитуриентов</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="registered-count">-</div>
+                <div class="stat-label">Зарегистрировано</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="rejected-count">-</div>
+                <div class="stat-label">Не зачислено</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">Ближайшие экзамены</div>
+            <div id="upcoming-exams">
+                <div class="loading">Загрузка...</div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/api.js"></script>
+    <script src="/js/auth.js"></script>
+    <script>
+        // Проверка авторизации
+        checkAuth().then(user => {
+            if (!user || !user.is_secretary) {
+                window.location.href = '/';
+                return;
+            }
+            document.getElementById('user-name').textContent = user.name;
+            loadDashboard();
+        });
+
+        async function loadDashboard() {
+            try {
+                const stats = await API.getDashboardStats();
+
+                document.getElementById('applications-count').textContent = stats.applicationsCount;
+                document.getElementById('admitted-count').textContent = stats.admittedCount;
+                document.getElementById('registered-count').textContent = stats.statusCounts.registered || 0;
+                document.getElementById('rejected-count').textContent = stats.statusCounts.rejected || 0;
+
+                const examsContainer = document.getElementById('upcoming-exams');
+                if (stats.upcomingExams.length === 0) {
+                    examsContainer.innerHTML = '<p>Нет предстоящих экзаменов</p>';
+                } else {
+                    examsContainer.innerHTML = `
+            <table>
+              <thead>
+                <tr>
+                  <th>Дата и время</th>
+                  <th>Предмет</th>
+                  <th>Аудитория</th>
+                  <th>Абитуриентов</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${stats.upcomingExams.map(exam => `
+                  <tr>
+                    <td>${new Date(exam.exam_date).toLocaleString('ru-RU')}</td>
+                    <td>${exam.subject_name}</td>
+                    <td>${exam.room_number || '-'}</td>
+                    <td>${exam.applicants_count}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          `;
+                }
+            } catch (error) {
+                console.error('Ошибка при загрузке дашборда:', error);
+                alert('Ошибка при загрузке данных');
+            }
+        }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Экзамены и группы - Секретарь</title>
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+
+<body>
+    <nav class="navbar">
+        <div class="navbar-content">
+            <div class="navbar-brand">Приемная комиссия</div>
+            <ul class="navbar-menu">
+                <li><a href="/secretary/dashboard.html">Дашборд</a></li>
+                <li><a href="/secretary/applicants.html">Абитуриенты</a></li>
+                <li><a href="/secretary/groups.html">Экзамены</a></li>
+                <li><a href="/secretary/settings.html">Настройки</a></li>
+            </ul>
+            <div class="navbar-user">
+                <span id="user-name"></span>
+                <button class="edit-btn" onclick="logout()" title="Выход" style="color: white;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path
+                            d="M9 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V5C3 4.46957 3.21071 3.96086 3.58579 3.58579C3.96086 3.21071 4.46957 3 5 3H9"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                        <path d="M16 17L21 12L16 7" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                            stroke-linejoin="round" />
+                        <path d="M21 12H9" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                            stroke-linejoin="round" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="d-flex justify-between align-center mb-3">
+            <h1>Управление экзаменами и группами</h1>
+            <button class="btn btn-primary" onclick="openAddGroupModal()">Создать группу</button>
+        </div>
+
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID группы</th>
+                        <th>Предмет</th>
+                        <th>Дата и время</th>
+                        <th>Аудитория</th>
+                        <th>Абитуриентов</th>
+                        <th>Преподавателей</th>
+                        <th>Действия</th>
+                    </tr>
+                </thead>
+                <tbody id="groups-table">
+                    <tr>
+                        <td colspan="7" class="text-center loading">Загрузка...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Модальное окно создания группы -->
+    <div id="group-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Создать группу</h2>
+                <button class="modal-close" onclick="closeGroupModal()">&times;</button>
+            </div>
+            <form id="group-form">
+                <div class="form-group">
+                    <label class="form-label">Предмет *</label>
+                    <select class="form-control" id="group-subject-id" required>
+                        <option value="">Выберите предмет</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Дата и время *</label>
+                    <input type="datetime-local" class="form-control" id="group-exam-date" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Аудитория</label>
+                    <input type="text" class="form-control" id="group-room-number">
+                </div>
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary">Создать</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeGroupModal()">Отмена</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Модальное окно деталей группы -->
+    <div id="group-details-modal" class="modal">
+        <div class="modal-content" style="max-width: 900px;">
+            <div class="modal-header">
+                <h2 class="modal-title" id="group-details-title">Детали группы</h2>
+                <button class="modal-close" onclick="closeGroupDetailsModal()">&times;</button>
+            </div>
+            <div id="group-details-content">
+                <div class="loading">Загрузка...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно добавления преподавателей -->
+    <div id="teachers-modal" class="modal">
+        <div class="modal-content" style="max-width: 700px;">
+            <div class="modal-header">
+                <h2 class="modal-title">Добавить преподавателей</h2>
+                <button class="modal-close" onclick="closeTeachersModal()">&times;</button>
+            </div>
+            <div class="form-group">
+                <input type="text" class="form-control" id="teachers-search" placeholder="Поиск по имени...">
+            </div>
+            <div id="teachers-modal-list" style="max-height: 500px; overflow-y: auto;">
+                <div class="loading">Загрузка...</div>
+            </div>
+            <div class="d-flex gap-2 mt-3">
+                <button class="btn btn-secondary" onclick="closeTeachersModal()">Закрыть</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно добавления абитуриентов -->
+    <div id="applicants-modal" class="modal">
+        <div class="modal-content" style="max-width: 700px;">
+            <div class="modal-header">
+                <h2 class="modal-title">Добавить абитуриентов</h2>
+                <button class="modal-close" onclick="closeApplicantsModal()">&times;</button>
+            </div>
+            <div class="form-group">
+                <input type="text" class="form-control" id="applicants-search" placeholder="Поиск по имени...">
+            </div>
+            <div id="applicants-modal-list" style="max-height: 500px; overflow-y: auto;">
+                <div class="loading">Загрузка...</div>
+            </div>
+            <div class="d-flex gap-2 mt-3">
+                <button class="btn btn-secondary" onclick="closeApplicantsModal()">Закрыть</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/api.js"></script>
+    <script src="/js/auth.js"></script>
+    <script>
+        let groups = [];
+        let subjects = [];
+        let teachers = [];
+        let currentGroupId = null;
+
+        checkAuth().then(user => {
+            if (!user || !user.is_secretary) {
+                window.location.href = '/';
+                return;
+            }
+            document.getElementById('user-name').textContent = user.name;
+            loadSubjects();
+            loadTeachers();
+            loadGroups();
+        });
+
+        async function loadSubjects() {
+            try {
+                subjects = await API.getSubjects();
+                const select = document.getElementById('group-subject-id');
+                subjects.forEach(subject => {
+                    select.appendChild(new Option(subject.name, subject.id));
+                });
+            } catch (error) {
+                console.error('Ошибка при загрузке предметов:', error);
+            }
+        }
+
+        async function loadTeachers() {
+            try {
+                teachers = await API.getTeachers();
+            } catch (error) {
+                console.error('Ошибка при загрузке преподавателей:', error);
+            }
+        }
+
+        async function loadGroups() {
+            try {
+                groups = await API.getGroups();
+                renderGroups();
+            } catch (error) {
+                console.error('Ошибка при загрузке групп:', error);
+                alert('Ошибка при загрузке данных');
+            }
+        }
+
+        function renderGroups() {
+            const tbody = document.getElementById('groups-table');
+            if (groups.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center">Нет данных</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = groups.map(group => `
+        <tr>
+          <td>${group.id}</td>
+          <td>${group.subject_name}</td>
+          <td>${new Date(group.exam_date).toLocaleString('ru-RU')}</td>
+          <td>${group.room_number || '-'}</td>
+          <td>${group.applicants_count}</td>
+          <td>${group.teachers_count}</td>
+          <td style="text-align: center;">
+            <button class="edit-btn" onclick="showGroupDetails(${group.id})" title="Развернуть">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M8 9L12 13L16 9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="currentColor" stroke-width="2"/>
+              </svg>
+            </button>
+          </td>
+        </tr>
+      `).join('');
+        }
+
+        function openAddGroupModal() {
+            document.getElementById('group-form').reset();
+            document.getElementById('group-modal').classList.add('active');
+        }
+
+        function closeGroupModal() {
+            document.getElementById('group-modal').classList.remove('active');
+        }
+
+        document.getElementById('group-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const data = {
+                subject_id: parseInt(document.getElementById('group-subject-id').value),
+                exam_date: document.getElementById('group-exam-date').value,
+                room_number: document.getElementById('group-room-number').value || null
+            };
+
+            try {
+                await API.createGroup(data);
+                closeGroupModal();
+                loadGroups();
+            } catch (error) {
+                alert('Ошибка: ' + error.message);
+            }
+        });
+
+        async function showGroupDetails(id) {
+            currentGroupId = id;
+            const modal = document.getElementById('group-details-modal');
+            const content = document.getElementById('group-details-content');
+            modal.classList.add('active');
+            content.innerHTML = '<div class="loading">Загрузка...</div>';
+
+            try {
+                const data = await API.getGroup(id);
+                const group = data.group;
+                const isPast = new Date(group.exam_date) < new Date();
+
+                content.innerHTML = `
+          <div class="mb-3">
+            <h3>Информация о группе</h3>
+            <p><strong>Предмет:</strong> ${group.subject_name}</p>
+            <p><strong>Дата и время:</strong> ${new Date(group.exam_date).toLocaleString('ru-RU')}</p>
+            <p><strong>Аудитория:</strong> ${group.room_number || '-'}</p>
+          </div>
+
+          <div class="mb-3">
+            <div class="d-flex justify-between align-center mb-2">
+              <h3>Преподаватели</h3>
+              <button class="edit-btn" onclick="showAddTeacherModal()" title="Добавить">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M12 5V19M5 12H19" stroke="var(--status-admitted)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </button>
+            </div>
+            <div id="teachers-list">
+              ${data.teachers.length === 0 ? '<p>Нет преподавателей</p>' :
+                        data.teachers.map(t => `
+                  <div class="d-flex justify-between align-center mb-1">
+                    <span>${t.last_name} ${t.first_name} ${t.middle_name || ''}</span>
+                    <button class="edit-btn" onclick="removeTeacher(${t.id})" title="Удалить" style="color: var(--status-rejected);">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M3 6H5H21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M8 6V4C8 3.46957 8.21071 2.96086 8.58579 2.58579C8.96086 2.21071 9.46957 2 10 2H14C14.5304 2 15.0391 2.21071 15.4142 2.58579C15.7893 2.96086 16 3.46957 16 4V6M19 6V20C19 20.5304 18.7893 21.0391 18.4142 21.4142C18.0391 21.7893 17.5304 22 17 22H7C6.46957 22 5.96086 21.7893 5.58579 21.4142C5.21071 21.0391 5 20.5304 5 20V6H19Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                      </svg>
+                    </button>
+                  </div>
+                `).join('')
+                    }
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <div class="d-flex justify-between align-center mb-2">
+              <h3>Абитуриенты</h3>
+              <button class="edit-btn" onclick="showAddApplicantModal()" title="Добавить">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M12 5V19M5 12H19" stroke="var(--status-admitted)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </button>
+            </div>
+            <div id="applicants-list">
+              ${data.applicants.length === 0 ? '<p>Нет абитуриентов</p>' :
+                        data.applicants.map(a => `
+                  <div class="d-flex justify-between align-center mb-1">
+                    <span>${a.last_name} ${a.first_name} ${a.middle_name || ''}</span>
+                    <button class="edit-btn" onclick="removeApplicant(${a.id})" title="Удалить" style="color: var(--status-rejected);">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M3 6H5H21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M8 6V4C8 3.46957 8.21071 2.96086 8.58579 2.58579C8.96086 2.21071 9.46957 2 10 2H14C14.5304 2 15.0391 2.21071 15.4142 2.58579C15.7893 2.96086 16 3.46957 16 4V6M19 6V20C19 20.5304 18.7893 21.0391 18.4142 21.4142C18.0391 21.7893 17.5304 22 17 22H7C6.46957 22 5.96086 21.7893 5.58579 21.4142C5.21071 21.0391 5 20.5304 5 20V6H19Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                      </svg>
+                    </button>
+                  </div>
+                `).join('')
+                    }
+            </div>
+          </div>
+
+          ${isPast ? `
+            <div class="mb-3">
+              <h3>Результаты экзамена</h3>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Абитуриент</th>
+                    <th>Балл</th>
+                  </tr>
+                </thead>
+                <tbody id="results-table">
+                  ${data.results.map(r => `
+                    <tr>
+                      <td>${r.last_name} ${r.first_name} ${r.middle_name || ''}</td>
+                      <td>
+                        <input type="number" class="form-control" style="width: 100px;" 
+                               min="0" max="100" value="${r.score || ''}" 
+                               data-applicant-id="${r.id}" onchange="updateResult(${r.id}, this.value)">
+                      </td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+              <button class="btn btn-primary mt-2" onclick="saveResults()">Сохранить результаты</button>
+            </div>
+          ` : ''}
+        `;
+            } catch (error) {
+                content.innerHTML = '<p class="alert alert-error">Ошибка при загрузке данных</p>';
+            }
+        }
+
+        function closeGroupDetailsModal() {
+            document.getElementById('group-details-modal').classList.remove('active');
+            currentGroupId = null;
+        }
+
+        async function showAddTeacherModal() {
+            const modal = document.getElementById('teachers-modal');
+            const list = document.getElementById('teachers-modal-list');
+            modal.classList.add('active');
+            list.innerHTML = '<div class="loading">Загрузка...</div>';
+
+            try {
+                const teachers = await API.getTeachersList(currentGroupId);
+                renderTeachersModal(teachers);
+            } catch (error) {
+                list.innerHTML = '<p class="alert alert-error">Ошибка при загрузке данных</p>';
+            }
+        }
+
+        function renderTeachersModal(teachers, searchTerm = '') {
+            const list = document.getElementById('teachers-modal-list');
+            const filtered = teachers.filter(t => {
+                const fullName = `${t.last_name} ${t.first_name} ${t.middle_name || ''}`.toLowerCase();
+                return fullName.includes(searchTerm.toLowerCase());
+            });
+
+            if (filtered.length === 0) {
+                list.innerHTML = '<p>Нет преподавателей</p>';
+                return;
+            }
+
+            list.innerHTML = filtered.map(teacher => `
+                <div class="d-flex align-center mb-2" style="padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 4px;">
+                    <button class="edit-btn" onclick="toggleTeacherInGroup(${teacher.id}, ${teacher.in_group})" title="${teacher.in_group ? 'Удалить' : 'Добавить'}">
+                        ${teacher.in_group ? `
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M18 6L6 18M6 6L18 18" stroke="var(--status-rejected)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        ` : `
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M12 5V19M5 12H19" stroke="var(--status-admitted)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        `}
+                    </button>
+                    <span style="margin-left: 1rem; flex: 1;">${teacher.last_name} ${teacher.first_name} ${teacher.middle_name || ''}</span>
+                    ${teacher.in_group ? '<span class="status-badge status-admitted">В группе</span>' : ''}
+                </div>
+            `).join('');
+        }
+
+        async function toggleTeacherInGroup(teacherId, isInGroup) {
+            try {
+                if (isInGroup) {
+                    await API.removeTeacherFromGroup(currentGroupId, teacherId);
+                } else {
+                    await API.addTeacherToGroup(currentGroupId, teacherId);
+                }
+                // Обновляем список
+                const teachers = await API.getTeachersList(currentGroupId);
+                const searchTerm = document.getElementById('teachers-search').value;
+                renderTeachersModal(teachers, searchTerm);
+                // Обновляем детали группы
+                showGroupDetails(currentGroupId);
+            } catch (error) {
+                alert('Ошибка: ' + error.message);
+            }
+        }
+
+        function closeTeachersModal() {
+            document.getElementById('teachers-modal').classList.remove('active');
+            document.getElementById('teachers-search').value = '';
+        }
+
+        // Поиск преподавателей
+        document.getElementById('teachers-search').addEventListener('input', debounce(async (e) => {
+            const searchTerm = e.target.value;
+            try {
+                const teachers = await API.getTeachersList(currentGroupId);
+                renderTeachersModal(teachers, searchTerm);
+            } catch (error) {
+                console.error('Ошибка при поиске:', error);
+            }
+        }, 300));
+
+        async function removeTeacher(teacherId) {
+            if (confirm('Удалить преподавателя из группы?')) {
+                try {
+                    await API.removeTeacherFromGroup(currentGroupId, teacherId);
+                    showGroupDetails(currentGroupId);
+                } catch (error) {
+                    alert('Ошибка: ' + error.message);
+                }
+            }
+        }
+
+        async function showAddApplicantModal() {
+            const modal = document.getElementById('applicants-modal');
+            const list = document.getElementById('applicants-modal-list');
+            modal.classList.add('active');
+            list.innerHTML = '<div class="loading">Загрузка...</div>';
+
+            try {
+                console.log('Loading applicants for group:', currentGroupId);
+                const applicants = await API.getApplicantsList(currentGroupId);
+                console.log('Received applicants:', applicants);
+                renderApplicantsModal(applicants);
+            } catch (error) {
+                console.error('Error loading applicants:', error);
+                list.innerHTML = `<p class="alert alert-error">Ошибка при загрузке данных: ${error.message}</p>`;
+            }
+        }
+
+        function renderApplicantsModal(applicants, searchTerm = '') {
+            const list = document.getElementById('applicants-modal-list');
+            const filtered = applicants.filter(a => {
+                const fullName = `${a.last_name} ${a.first_name} ${a.middle_name || ''}`.toLowerCase();
+                return fullName.includes(searchTerm.toLowerCase());
+            });
+
+            if (filtered.length === 0) {
+                list.innerHTML = '<p>Нет абитуриентов</p>';
+                return;
+            }
+
+            list.innerHTML = filtered.map(applicant => `
+                <div class="d-flex align-center mb-2" style="padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 4px;">
+                    <button class="edit-btn" onclick="toggleApplicantInGroup(${applicant.id}, ${applicant.in_group})" title="${applicant.in_group ? 'Удалить' : 'Добавить'}">
+                        ${applicant.in_group ? `
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M18 6L6 18M6 6L18 18" stroke="var(--status-rejected)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        ` : `
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M12 5V19M5 12H19" stroke="var(--status-admitted)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        `}
+                    </button>
+                    <div style="margin-left: 1rem; flex: 1;">
+                        <div>${applicant.last_name} ${applicant.first_name} ${applicant.middle_name || ''}</div>
+                        <div style="font-size: 0.875rem; color: #666;">${applicant.specialty_name}</div>
+                        ${applicant.has_passed_exam ? '<span class="status-badge status-admitted" style="font-size: 0.75rem; margin-top: 0.25rem; display: inline-block;">Сдал экзамен</span>' : '<span class="status-badge status-registered" style="font-size: 0.75rem; margin-top: 0.25rem; display: inline-block;">Не сдавал</span>'}
+                    </div>
+                    ${applicant.in_group ? '<span class="status-badge status-admitted">В группе</span>' : ''}
+                </div>
+            `).join('');
+        }
+
+        async function toggleApplicantInGroup(applicantId, isInGroup) {
+            try {
+                if (isInGroup) {
+                    await API.removeApplicantFromGroup(currentGroupId, applicantId);
+                } else {
+                    const response = await API.addApplicantToGroup(currentGroupId, applicantId);
+                    // Показываем подсказку об автоматическом удалении из другой группы
+                    const alertDiv = document.createElement('div');
+                    alertDiv.className = 'alert alert-success';
+                    alertDiv.textContent = response.message || 'Абитуриент добавлен. Если он был в другой группе по этому предмету, он был автоматически удален оттуда.';
+                    alertDiv.style.position = 'fixed';
+                    alertDiv.style.top = '20px';
+                    alertDiv.style.right = '20px';
+                    alertDiv.style.zIndex = '10000';
+                    alertDiv.style.maxWidth = '400px';
+                    document.body.appendChild(alertDiv);
+                    setTimeout(() => alertDiv.remove(), 5000);
+                }
+                // Обновляем список
+                const applicants = await API.getApplicantsList(currentGroupId);
+                const searchTerm = document.getElementById('applicants-search').value;
+                renderApplicantsModal(applicants, searchTerm);
+                // Обновляем детали группы
+                showGroupDetails(currentGroupId);
+            } catch (error) {
+                alert('Ошибка: ' + error.message);
+            }
+        }
+
+        function closeApplicantsModal() {
+            document.getElementById('applicants-modal').classList.remove('active');
+            document.getElementById('applicants-search').value = '';
+        }
+
+        // Поиск абитуриентов
+        document.getElementById('applicants-search').addEventListener('input', debounce(async (e) => {
+            const searchTerm = e.target.value;
+            try {
+                const applicants = await API.getApplicantsList(currentGroupId);
+                renderApplicantsModal(applicants, searchTerm);
+            } catch (error) {
+                console.error('Ошибка при поиске:', error);
+            }
+        }, 300));
+
+        async function removeApplicant(applicantId) {
+            if (confirm('Удалить абитуриента из группы?')) {
+                try {
+                    await API.removeApplicantFromGroup(currentGroupId, applicantId);
+                    showGroupDetails(currentGroupId);
+                } catch (error) {
+                    alert('Ошибка: ' + error.message);
+                }
+            }
+        }
+
+        let resultsToSave = {};
+
+        function updateResult(applicantId, score) {
+            resultsToSave[applicantId] = score === '' ? null : parseInt(score);
+        }
+
+        async function saveResults() {
+            const results = Object.entries(resultsToSave).map(([applicant_id, score]) => ({
+                applicant_id: parseInt(applicant_id),
+                score: score
+            }));
+
+            try {
+                await API.updateGroupResults(currentGroupId, results);
+                alert('Результаты сохранены');
+                resultsToSave = {};
+                showGroupDetails(currentGroupId);
+            } catch (error) {
+                alert('Ошибка: ' + error.message);
+            }
+        }
+
+        // Функция debounce для поиска
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        // Закрытие модальных окон при клике вне их
+        document.getElementById('teachers-modal').addEventListener('click', (e) => {
+            if (e.target.id === 'teachers-modal') {
+                closeTeachersModal();
+            }
+        });
+
+        document.getElementById('applicants-modal').addEventListener('click', (e) => {
+            if (e.target.id === 'applicants-modal') {
+                closeApplicantsModal();
+            }
+        });
+    </script>
+</body>
+
+</html>

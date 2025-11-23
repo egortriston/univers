@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Настройки - Секретарь</title>
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+
+<body>
+    <nav class="navbar">
+        <div class="navbar-content">
+            <div class="navbar-brand">Приемная комиссия</div>
+            <ul class="navbar-menu">
+                <li><a href="/secretary/dashboard.html">Дашборд</a></li>
+                <li><a href="/secretary/applicants.html">Абитуриенты</a></li>
+                <li><a href="/secretary/groups.html">Экзамены</a></li>
+                <li><a href="/secretary/settings.html">Настройки</a></li>
+            </ul>
+            <div class="navbar-user">
+                <span id="user-name"></span>
+                <button class="edit-btn" onclick="logout()" title="Выход" style="color: white;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path
+                            d="M9 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V5C3 4.46957 3.21071 3.96086 3.58579 3.58579C3.96086 3.21071 4.46957 3 5 3H9"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                        <path d="M16 17L21 12L16 7" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                            stroke-linejoin="round" />
+                        <path d="M21 12H9" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                            stroke-linejoin="round" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <h1>Справочники и настройки</h1>
+
+        <div class="tabs">
+            <button class="tab active" data-tab="specialties">Специальности</button>
+            <button class="tab" data-tab="teachers">Преподаватели</button>
+            <button class="tab" data-tab="subjects">Предметы</button>
+        </div>
+
+        <!-- Вкладка Специальности -->
+        <div id="specialties-tab" class="tab-content active">
+            <div class="d-flex justify-between align-center mb-3">
+                <h2>Специальности</h2>
+                <button class="btn btn-primary" onclick="openSpecialtyModal()">Добавить специальность</button>
+            </div>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Название</th>
+                            <th>Код</th>
+                            <th>Мест</th>
+                            <th>Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody id="specialties-table">
+                        <tr>
+                            <td colspan="5" class="text-center loading">Загрузка...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Вкладка Преподаватели -->
+        <div id="teachers-tab" class="tab-content">
+            <div class="d-flex justify-between align-center mb-3">
+                <h2>Преподаватели</h2>
+                <button class="btn btn-primary" onclick="openTeacherModal()">Добавить преподавателя</button>
+            </div>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>ФИО</th>
+                            <th>Email</th>
+                            <th>Телефон</th>
+                            <th>Роли</th>
+                            <th>Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody id="teachers-table">
+                        <tr>
+                            <td colspan="6" class="text-center loading">Загрузка...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Вкладка Предметы -->
+        <div id="subjects-tab" class="tab-content">
+            <div class="d-flex justify-between align-center mb-3">
+                <h2>Предметы</h2>
+                <button class="btn btn-primary" onclick="openSubjectModal()">Добавить предмет</button>
+            </div>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Название</th>
+                            <th>Описание</th>
+                            <th>Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody id="subjects-table">
+                        <tr>
+                            <td colspan="4" class="text-center loading">Загрузка...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно специальности -->
+    <div id="specialty-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="specialty-modal-title">Добавить специальность</h2>
+                <button class="modal-close" onclick="closeSpecialtyModal()">&times;</button>
+            </div>
+            <form id="specialty-form">
+                <input type="hidden" id="specialty-id">
+                <div class="form-group">
+                    <label class="form-label">Название *</label>
+                    <input type="text" class="form-control" id="specialty-name" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Код *</label>
+                    <input type="text" class="form-control" id="specialty-code" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Количество мест *</label>
+                    <input type="number" class="form-control" id="specialty-seats" required min="1">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Предметы</label>
+                    <div id="specialty-subjects-multiselect" class="multiselect">
+                        <div class="multiselect-input" onclick="toggleMultiselect('specialty')">
+                            Выберите предметы
+                        </div>
+                        <div class="multiselect-dropdown" id="specialty-subjects-dropdown">
+                            <!-- Заполняется динамически -->
+                        </div>
+                    </div>
+                </div>
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary">Сохранить</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeSpecialtyModal()">Отмена</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Модальное окно преподавателя -->
+    <div id="teacher-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="teacher-modal-title">Добавить преподавателя</h2>
+                <button class="modal-close" onclick="closeTeacherModal()">&times;</button>
+            </div>
+            <form id="teacher-form">
+                <input type="hidden" id="teacher-id">
+                <div class="form-group">
+                    <label class="form-label">Имя *</label>
+                    <input type="text" class="form-control" id="teacher-first-name" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Фамилия *</label>
+                    <input type="text" class="form-control" id="teacher-last-name" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Отчество</label>
+                    <input type="text" class="form-control" id="teacher-middle-name">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Email *</label>
+                    <input type="email" class="form-control" id="teacher-email" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Телефон</label>
+                    <input type="tel" class="form-control" id="teacher-phone">
+                </div>
+                <div class="form-group" id="teacher-password-group">
+                    <label class="form-label">Пароль *</label>
+                    <input type="password" class="form-control" id="teacher-password" required>
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="teacher-is-teacher"> Преподаватель
+                    </label>
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="teacher-is-secretary"> Секретарь
+                    </label>
+                </div>
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary">Сохранить</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeTeacherModal()">Отмена</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Модальное окно предмета -->
+    <div id="subject-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="subject-modal-title">Добавить предмет</h2>
+                <button class="modal-close" onclick="closeSubjectModal()">&times;</button>
+            </div>
+            <form id="subject-form">
+                <input type="hidden" id="subject-id">
+                <div class="form-group">
+                    <label class="form-label">Название *</label>
+                    <input type="text" class="form-control" id="subject-name" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Описание</label>
+                    <textarea class="form-control" id="subject-description"></textarea>
+                </div>
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary">Сохранить</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeSubjectModal()">Отмена</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="/js/api.js"></script>
+    <script src="/js/auth.js"></script>
+    <script>
+        let specialties = [];
+        let teachers = [];
+        let subjects = [];
+        let selectedSubjects = new Set();
+
+        checkAuth().then(user => {
+            if (!user || !user.is_secretary) {
+                window.location.href = '/';
+                return;
+            }
+            document.getElementById('user-name').textContent = user.name;
+            loadData();
+        });
+
+        // Переключение вкладок
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                const tabName = tab.dataset.tab;
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                tab.classList.add('active');
+                document.getElementById(`${tabName}-tab`).classList.add('active');
+            });
+        });
+
+        async function loadData() {
+            await Promise.all([
+                loadSpecialties(),
+                loadTeachers(),
+                loadSubjects()
+            ]);
+        }
+
+        // Специальности
+        async function loadSpecialties() {
+            try {
+                specialties = await API.getSpecialties();
+                renderSpecialties();
+            } catch (error) {
+                console.error('Ошибка при загрузке специальностей:', error);
+            }
+        }
+
+        function renderSpecialties() {
+            const tbody = document.getElementById('specialties-table');
+            if (specialties.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center">Нет данных</td></tr>';
+                return;
+            }
+            tbody.innerHTML = specialties.map(s => `
+        <tr>
+          <td>${s.id}</td>
+          <td>${s.name}</td>
+          <td>${s.code}</td>
+          <td>${s.seats_count}</td>
+          <td style="text-align: center;">
+            <button class="edit-btn" onclick="editSpecialty(${s.id})" title="Редактировать">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M11 4H4C3.46957 4 2.96086 4.21071 2.58579 4.58579C2.21071 4.96086 2 5.46957 2 6V20C2 20.5304 2.21071 21.0391 2.58579 21.4142C2.96086 21.7893 3.46957 22 4 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M18.5 2.50023C18.8978 2.10243 19.4374 1.87891 20 1.87891C20.5626 1.87891 21.1022 2.10243 21.5 2.50023C21.8978 2.89804 22.1213 3.43762 22.1213 4.00023C22.1213 4.56284 21.8978 5.10243 21.5 5.50023L12 15.0002L8 16.0002L9 12.0002L18.5 2.50023Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
+            <button class="edit-btn" onclick="deleteSpecialty(${s.id})" title="Удалить" style="color: var(--status-rejected); margin-left: 0.5rem;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M3 6H5H21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M8 6V4C8 3.46957 8.21071 2.96086 8.58579 2.58579C8.96086 2.21071 9.46957 2 10 2H14C14.5304 2 15.0391 2.21071 15.4142 2.58579C15.7893 2.96086 16 3.46957 16 4V6M19 6V20C19 20.5304 18.7893 21.0391 18.4142 21.4142C18.0391 21.7893 17.5304 22 17 22H7C6.46957 22 5.96086 21.7893 5.58579 21.4142C5.21071 21.0391 5 20.5304 5 20V6H19Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
+          </td>
+        </tr>
+      `).join('');
+        }
+
+        function openSpecialtyModal() {
+            document.getElementById('specialty-modal-title').textContent = 'Добавить специальность';
+            document.getElementById('specialty-form').reset();
+            document.getElementById('specialty-id').value = '';
+            selectedSubjects.clear();
+            updateMultiselectDisplay('specialty');
+            document.getElementById('specialty-modal').classList.add('active');
+        }
+
+        function closeSpecialtyModal() {
+            document.getElementById('specialty-modal').classList.remove('active');
+        }
+
+        async function editSpecialty(id) {
+            const specialty = specialties.find(s => s.id === id);
+            if (!specialty) return;
+
+            document.getElementById('specialty-modal-title').textContent = 'Редактировать специальность';
+            document.getElementById('specialty-id').value = id;
+            document.getElementById('specialty-name').value = specialty.name;
+            document.getElementById('specialty-code').value = specialty.code;
+            document.getElementById('specialty-seats').value = specialty.seats_count;
+
+            try {
+                const specialtySubjects = await API.getSpecialtySubjects(id);
+                selectedSubjects = new Set(specialtySubjects.map(s => s.id));
+                updateMultiselectDisplay('specialty');
+            } catch (error) {
+                console.error('Ошибка при загрузке предметов специальности:', error);
+            }
+
+            document.getElementById('specialty-modal').classList.add('active');
+        }
+
+        async function deleteSpecialty(id) {
+            if (confirm('Удалить специальность?')) {
+                try {
+                    await API.deleteSpecialty(id);
+                    loadSpecialties();
+                } catch (error) {
+                    alert('Ошибка: ' + error.message);
+                }
+            }
+        }
+
+        document.getElementById('specialty-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('specialty-id').value;
+            const data = {
+                name: document.getElementById('specialty-name').value,
+                code: document.getElementById('specialty-code').value,
+                seats_count: parseInt(document.getElementById('specialty-seats').value),
+                subject_ids: Array.from(selectedSubjects)
+            };
+
+            try {
+                if (id) {
+                    await API.updateSpecialty(id, data);
+                } else {
+                    await API.createSpecialty(data);
+                }
+                closeSpecialtyModal();
+                loadSpecialties();
+            } catch (error) {
+                alert('Ошибка: ' + error.message);
+            }
+        });
+
+        // Преподаватели
+        async function loadTeachers() {
+            try {
+                teachers = await API.getTeachers();
+                renderTeachers();
+            } catch (error) {
+                console.error('Ошибка при загрузке преподавателей:', error);
+            }
+        }
+
+        function renderTeachers() {
+            const tbody = document.getElementById('teachers-table');
+            if (teachers.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center">Нет данных</td></tr>';
+                return;
+            }
+            tbody.innerHTML = teachers.map(t => `
+        <tr>
+          <td>${t.id}</td>
+          <td>${t.last_name} ${t.first_name} ${t.middle_name || ''}</td>
+          <td>${t.email || '-'}</td>
+          <td>${t.phone || '-'}</td>
+          <td>
+            ${t.is_teacher ? '<span class="status-badge status-registered">Преподаватель</span>' : ''}
+            ${t.is_secretary ? '<span class="status-badge status-admitted">Секретарь</span>' : ''}
+          </td>
+          <td style="text-align: center;">
+            <button class="edit-btn" onclick="editTeacher(${t.id})" title="Редактировать">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M11 4H4C3.46957 4 2.96086 4.21071 2.58579 4.58579C2.21071 4.96086 2 5.46957 2 6V20C2 20.5304 2.21071 21.0391 2.58579 21.4142C2.96086 21.7893 3.46957 22 4 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M18.5 2.50023C18.8978 2.10243 19.4374 1.87891 20 1.87891C20.5626 1.87891 21.1022 2.10243 21.5 2.50023C21.8978 2.89804 22.1213 3.43762 22.1213 4.00023C22.1213 4.56284 21.8978 5.10243 21.5 5.50023L12 15.0002L8 16.0002L9 12.0002L18.5 2.50023Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
+            <button class="edit-btn" onclick="deleteTeacher(${t.id})" title="Удалить" style="color: var(--status-rejected); margin-left: 0.5rem;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M3 6H5H21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M8 6V4C8 3.46957 8.21071 2.96086 8.58579 2.58579C8.96086 2.21071 9.46957 2 10 2H14C14.5304 2 15.0391 2.21071 15.4142 2.58579C15.7893 2.96086 16 3.46957 16 4V6M19 6V20C19 20.5304 18.7893 21.0391 18.4142 21.4142C18.0391 21.7893 17.5304 22 17 22H7C6.46957 22 5.96086 21.7893 5.58579 21.4142C5.21071 21.0391 5 20.5304 5 20V6H19Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
+          </td>
+        </tr>
+      `).join('');
+        }
+
+        function openTeacherModal() {
+            document.getElementById('teacher-modal-title').textContent = 'Добавить преподавателя';
+            document.getElementById('teacher-form').reset();
+            document.getElementById('teacher-id').value = '';
+            document.getElementById('teacher-password-group').style.display = 'block';
+            document.getElementById('teacher-password').required = true;
+            document.getElementById('teacher-modal').classList.add('active');
+        }
+
+        function closeTeacherModal() {
+            document.getElementById('teacher-modal').classList.remove('active');
+        }
+
+        async function editTeacher(id) {
+            const teacher = teachers.find(t => t.id === id);
+            if (!teacher) return;
+
+            document.getElementById('teacher-modal-title').textContent = 'Редактировать преподавателя';
+            document.getElementById('teacher-id').value = id;
+            document.getElementById('teacher-first-name').value = teacher.first_name;
+            document.getElementById('teacher-last-name').value = teacher.last_name;
+            document.getElementById('teacher-middle-name').value = teacher.middle_name || '';
+            document.getElementById('teacher-email').value = teacher.email || '';
+            document.getElementById('teacher-phone').value = teacher.phone || '';
+            document.getElementById('teacher-is-teacher').checked = teacher.is_teacher;
+            document.getElementById('teacher-is-secretary').checked = teacher.is_secretary;
+            document.getElementById('teacher-password-group').style.display = 'none';
+            document.getElementById('teacher-password').required = false;
+            document.getElementById('teacher-modal').classList.add('active');
+        }
+
+        async function deleteTeacher(id) {
+            if (confirm('Удалить преподавателя?')) {
+                try {
+                    await API.deleteTeacher(id);
+                    loadTeachers();
+                } catch (error) {
+                    alert('Ошибка: ' + error.message);
+                }
+            }
+        }
+
+        document.getElementById('teacher-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('teacher-id').value;
+            const data = {
+                first_name: document.getElementById('teacher-first-name').value,
+                last_name: document.getElementById('teacher-last-name').value,
+                middle_name: document.getElementById('teacher-middle-name').value,
+                email: document.getElementById('teacher-email').value,
+                phone: document.getElementById('teacher-phone').value,
+                is_teacher: document.getElementById('teacher-is-teacher').checked,
+                is_secretary: document.getElementById('teacher-is-secretary').checked
+            };
+
+            const password = document.getElementById('teacher-password').value;
+            if (password) {
+                data.password = password;
+            }
+
+            try {
+                if (id) {
+                    await API.updateTeacher(id, data);
+                } else {
+                    await API.createTeacher(data);
+                }
+                closeTeacherModal();
+                loadTeachers();
+            } catch (error) {
+                alert('Ошибка: ' + error.message);
+            }
+        });
+
+        // Предметы
+        async function loadSubjects() {
+            try {
+                subjects = await API.getSubjects();
+                renderSubjects();
+                updateMultiselectOptions();
+            } catch (error) {
+                console.error('Ошибка при загрузке предметов:', error);
+            }
+        }
+
+        function renderSubjects() {
+            const tbody = document.getElementById('subjects-table');
+            if (subjects.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" class="text-center">Нет данных</td></tr>';
+                return;
+            }
+            tbody.innerHTML = subjects.map(s => `
+        <tr>
+          <td>${s.id}</td>
+          <td>${s.name}</td>
+          <td>${s.description || '-'}</td>
+          <td style="text-align: center;">
+            <button class="edit-btn" onclick="editSubject(${s.id})" title="Редактировать">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M11 4H4C3.46957 4 2.96086 4.21071 2.58579 4.58579C2.21071 4.96086 2 5.46957 2 6V20C2 20.5304 2.21071 21.0391 2.58579 21.4142C2.96086 21.7893 3.46957 22 4 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M18.5 2.50023C18.8978 2.10243 19.4374 1.87891 20 1.87891C20.5626 1.87891 21.1022 2.10243 21.5 2.50023C21.8978 2.89804 22.1213 3.43762 22.1213 4.00023C22.1213 4.56284 21.8978 5.10243 21.5 5.50023L12 15.0002L8 16.0002L9 12.0002L18.5 2.50023Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
+            <button class="edit-btn" onclick="deleteSubject(${s.id})" title="Удалить" style="color: var(--status-rejected); margin-left: 0.5rem;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M3 6H5H21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M8 6V4C8 3.46957 8.21071 2.96086 8.58579 2.58579C8.96086 2.21071 9.46957 2 10 2H14C14.5304 2 15.0391 2.21071 15.4142 2.58579C15.7893 2.96086 16 3.46957 16 4V6M19 6V20C19 20.5304 18.7893 21.0391 18.4142 21.4142C18.0391 21.7893 17.5304 22 17 22H7C6.46957 22 5.96086 21.7893 5.58579 21.4142C5.21071 21.0391 5 20.5304 5 20V6H19Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
+          </td>
+        </tr>
+      `).join('');
+        }
+
+        function openSubjectModal() {
+            document.getElementById('subject-modal-title').textContent = 'Добавить предмет';
+            document.getElementById('subject-form').reset();
+            document.getElementById('subject-id').value = '';
+            document.getElementById('subject-modal').classList.add('active');
+        }
+
+        function closeSubjectModal() {
+            document.getElementById('subject-modal').classList.remove('active');
+        }
+
+        function editSubject(id) {
+            const subject = subjects.find(s => s.id === id);
+            if (!subject) return;
+
+            document.getElementById('subject-modal-title').textContent = 'Редактировать предмет';
+            document.getElementById('subject-id').value = id;
+            document.getElementById('subject-name').value = subject.name;
+            document.getElementById('subject-description').value = subject.description || '';
+            document.getElementById('subject-modal').classList.add('active');
+        }
+
+        async function deleteSubject(id) {
+            if (confirm('Удалить предмет?')) {
+                try {
+                    await API.deleteSubject(id);
+                    loadSubjects();
+                } catch (error) {
+                    alert('Ошибка: ' + error.message);
+                }
+            }
+        }
+
+        document.getElementById('subject-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('subject-id').value;
+            const data = {
+                name: document.getElementById('subject-name').value,
+                description: document.getElementById('subject-description').value
+            };
+
+            try {
+                if (id) {
+                    await API.updateSubject(id, data);
+                } else {
+                    await API.createSubject(data);
+                }
+                closeSubjectModal();
+                loadSubjects();
+            } catch (error) {
+                alert('Ошибка: ' + error.message);
+            }
+        });
+
+        // Мультиселект для предметов
+        function updateMultiselectOptions() {
+            const dropdown = document.getElementById('specialty-subjects-dropdown');
+            dropdown.innerHTML = subjects.map(s => `
+        <div class="multiselect-item">
+          <label>
+            <input type="checkbox" value="${s.id}" 
+                   ${selectedSubjects.has(s.id) ? 'checked' : ''}
+                   onchange="toggleSubject(${s.id}, this.checked)">
+            ${s.name}
+          </label>
+        </div>
+      `).join('');
+        }
+
+        function toggleSubject(id, checked) {
+            if (checked) {
+                selectedSubjects.add(id);
+            } else {
+                selectedSubjects.delete(id);
+            }
+            updateMultiselectDisplay('specialty');
+        }
+
+        function toggleMultiselect(type) {
+            const dropdown = document.getElementById(`${type}-subjects-dropdown`);
+            dropdown.classList.toggle('active');
+        }
+
+        function updateMultiselectDisplay(type) {
+            const input = document.querySelector(`#${type}-subjects-multiselect .multiselect-input`);
+            if (selectedSubjects.size === 0) {
+                input.textContent = 'Выберите предметы';
+            } else {
+                const selected = Array.from(selectedSubjects).map(id => {
+                    const subject = subjects.find(s => s.id === id);
+                    return subject ? subject.name : id;
+                });
+                input.textContent = selected.join(', ');
+            }
+        }
+
+        // Закрытие мультиселекта при клике вне его
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.multiselect')) {
+                document.querySelectorAll('.multiselect-dropdown').forEach(d => d.classList.remove('active'));
+            }
+        });
+    </script>
+</body>
+
+</html>

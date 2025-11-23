@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Личный кабинет преподавателя</title>
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+
+<body>
+    <nav class="navbar">
+        <div class="navbar-content">
+            <div class="navbar-brand">Приемная комиссия</div>
+            <div class="navbar-user">
+                <span id="user-name"></span>
+                <button class="edit-btn" onclick="logout()" title="Выход" style="color: white;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path
+                            d="M9 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V5C3 4.46957 3.21071 3.96086 3.58579 3.58579C3.96086 3.21071 4.46957 3 5 3H9"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                        <path d="M16 17L21 12L16 7" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                            stroke-linejoin="round" />
+                        <path d="M21 12H9" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                            stroke-linejoin="round" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <h1>Личный кабинет преподавателя</h1>
+
+        <div class="card">
+            <div class="card-header">Мои группы</div>
+            <div id="groups-container">
+                <div class="loading">Загрузка...</div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/api.js"></script>
+    <script src="/js/auth.js"></script>
+    <script>
+        let groups = [];
+        let expandedGroups = new Set();
+
+        checkAuth().then(user => {
+            if (!user || !user.is_teacher) {
+                window.location.href = '/';
+                return;
+            }
+            document.getElementById('user-name').textContent = user.name;
+            loadGroups();
+        });
+
+        async function loadGroups() {
+            try {
+                groups = await API.getTeacherGroups();
+                renderGroups();
+            } catch (error) {
+                console.error('Ошибка при загрузке групп:', error);
+                document.getElementById('groups-container').innerHTML =
+                    '<p class="alert alert-error">Ошибка при загрузке данных</p>';
+            }
+        }
+
+        function renderGroups() {
+            const container = document.getElementById('groups-container');
+            if (groups.length === 0) {
+                container.innerHTML = '<p>У вас нет назначенных групп</p>';
+                return;
+            }
+
+            container.innerHTML = groups.map(group => `
+        <div class="accordion">
+          <div class="accordion-header" onclick="toggleGroup(${group.id})">
+            <div>
+              <strong>${group.subject_name}</strong> - 
+              ${new Date(group.exam_date).toLocaleString('ru-RU')} - 
+              Аудитория: ${group.room_number || '-'} - 
+              Абитуриентов: ${group.applicants_count}
+            </div>
+            <div>${expandedGroups.has(group.id) ? '▼' : '▶'}</div>
+          </div>
+          <div class="accordion-content ${expandedGroups.has(group.id) ? 'active' : ''}" id="group-content-${group.id}">
+            <div class="loading">Загрузка...</div>
+          </div>
+        </div>
+      `).join('');
+
+            // Загружаем данные для уже развернутых групп
+            expandedGroups.forEach(id => loadGroupDetails(id));
+        }
+
+        async function toggleGroup(id) {
+            if (expandedGroups.has(id)) {
+                expandedGroups.delete(id);
+            } else {
+                expandedGroups.add(id);
+                await loadGroupDetails(id);
+            }
+            renderGroups();
+        }
+
+        async function loadGroupDetails(id) {
+            const content = document.getElementById(`group-content-${id}`);
+            if (!content) return;
+
+            try {
+                const data = await API.getTeacherGroup(id);
+                const group = data.group;
+                const isPast = new Date(group.exam_date) < new Date();
+
+                content.innerHTML = `
+          <div class="mb-2">
+            <p><strong>Предмет:</strong> ${group.subject_name}</p>
+            <p><strong>Дата и время:</strong> ${new Date(group.exam_date).toLocaleString('ru-RU')}</p>
+            <p><strong>Аудитория:</strong> ${group.room_number || '-'}</p>
+          </div>
+
+          <h3>Абитуриенты группы</h3>
+          ${data.applicants.length === 0 ? '<p>Нет абитуриентов</p>' : `
+            <table>
+              <thead>
+                <tr>
+                  <th>ФИО</th>
+                  ${isPast ? '<th>Балл</th>' : ''}
+                </tr>
+              </thead>
+              <tbody>
+                ${data.applicants.map(a => `
+                  <tr>
+                    <td>${a.last_name} ${a.first_name} ${a.middle_name || ''}</td>
+                    ${isPast ? `
+                      <td>
+                        <input type="number" class="form-control" style="width: 100px;" 
+                               min="0" max="100" value="${a.score !== null ? a.score : ''}" 
+                               data-applicant-id="${a.id}" 
+                               onchange="updateScore(${id}, ${a.id}, this.value)">
+                      </td>
+                    ` : ''}
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+            ${isPast ? `
+              <button class="btn btn-primary mt-2" onclick="saveResults(${id})">Сохранить результаты</button>
+            ` : ''}
+          `}
+        `;
+            } catch (error) {
+                content.innerHTML = '<p class="alert alert-error">Ошибка при загрузке данных</p>';
+            }
+        }
+
+        const scoresToSave = {};
+
+        function updateScore(groupId, applicantId, score) {
+            if (!scoresToSave[groupId]) {
+                scoresToSave[groupId] = {};
+            }
+            scoresToSave[groupId][applicantId] = score === '' ? null : parseInt(score);
+        }
+
+        async function saveResults(groupId) {
+            if (!scoresToSave[groupId]) {
+                alert('Нет изменений для сохранения');
+                return;
+            }
+
+            const results = Object.entries(scoresToSave[groupId]).map(([applicant_id, score]) => ({
+                applicant_id: parseInt(applicant_id),
+                score: score
+            }));
+
+            try {
+                await API.updateTeacherGroupResults(groupId, results);
+                alert('Результаты сохранены');
+                delete scoresToSave[groupId];
+                await loadGroupDetails(groupId);
+            } catch (error) {
+                alert('Ошибка: ' + error.message);
+            }
+        }
+    </script>
+</body>
+
+</html>

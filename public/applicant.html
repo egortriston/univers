@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Личный кабинет абитуриента</title>
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+
+<body>
+    <nav class="navbar">
+        <div class="navbar-content">
+            <div class="navbar-brand">Приемная комиссия</div>
+            <div class="navbar-user">
+                <span id="user-name"></span>
+                <button class="edit-btn" onclick="logout()" title="Выход" style="color: white;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path
+                            d="M9 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V5C3 4.46957 3.21071 3.96086 3.58579 3.58579C3.96086 3.21071 4.46957 3 5 3H9"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                        <path d="M16 17L21 12L16 7" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                            stroke-linejoin="round" />
+                        <path d="M21 12H9" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                            stroke-linejoin="round" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <h1>Мое заявление и результаты</h1>
+
+        <div id="alert-container"></div>
+
+        <!-- Статус заявления -->
+        <div class="card mb-3">
+            <div class="card-header">Статус заявления</div>
+            <div id="status-display" style="text-align: center; padding: 2rem;">
+                <div class="loading">Загрузка...</div>
+            </div>
+        </div>
+
+        <!-- Информация о заявлении -->
+        <div class="card mb-3">
+            <div class="card-header">Информация о заявлении</div>
+            <div id="application-info">
+                <div class="loading">Загрузка...</div>
+            </div>
+        </div>
+
+        <!-- Вступительные экзамены -->
+        <div class="card mb-3">
+            <div class="card-header">Вступительные экзамены</div>
+            <div id="exams-table">
+                <div class="loading">Загрузка...</div>
+            </div>
+        </div>
+
+        <!-- Итоговый балл -->
+        <div class="card mb-3">
+            <div class="card-header">Итоговый балл</div>
+            <div style="text-align: center; padding: 1rem;">
+                <div class="stat-value" id="total-score">-</div>
+                <div class="stat-label">Сумма баллов по всем экзаменам</div>
+            </div>
+        </div>
+
+        <!-- Кнопка сообщить об ошибке -->
+        <div class="text-center">
+            <button class="btn btn-primary" onclick="reportError()">Сообщить об ошибке</button>
+        </div>
+    </div>
+
+    <script src="/js/api.js"></script>
+    <script src="/js/auth.js"></script>
+    <script>
+        checkAuth().then(user => {
+            if (!user || user.type !== 'applicant') {
+                window.location.href = '/';
+                return;
+            }
+            document.getElementById('user-name').textContent = user.name;
+            loadApplication();
+        });
+
+        async function loadApplication() {
+            try {
+                const data = await API.getApplication();
+                renderApplication(data);
+            } catch (error) {
+                console.error('Ошибка при загрузке заявления:', error);
+                document.getElementById('alert-container').innerHTML =
+                    '<div class="alert alert-error">Ошибка при загрузке данных</div>';
+            }
+        }
+
+        function renderApplication(data) {
+            const applicant = data.applicant;
+            const exams = data.exams;
+
+            // Статус
+            const statusDisplay = document.getElementById('status-display');
+            const statusText = {
+                'registered': 'Зарегистрирован',
+                'admitted': 'Зачислен',
+                'rejected': 'Не зачислен'
+            };
+            const statusColors = {
+                'registered': 'var(--status-registered)',
+                'admitted': 'var(--status-admitted)',
+                'rejected': 'var(--status-rejected)'
+            };
+            statusDisplay.innerHTML = `
+        <div style="font-size: 2rem; font-weight: bold; color: ${statusColors[applicant.status]}; margin-bottom: 1rem;">
+          ${statusText[applicant.status]}
+        </div>
+        <span class="status-badge status-${applicant.status}" style="font-size: 1.2rem; padding: 0.5rem 1.5rem;">
+          ${statusText[applicant.status]}
+        </span>
+      `;
+
+            // Информация о заявлении
+            document.getElementById('application-info').innerHTML = `
+        <p><strong>ФИО:</strong> ${applicant.last_name} ${applicant.first_name} ${applicant.middle_name || ''}</p>
+        <p><strong>Дата рождения:</strong> ${new Date(applicant.birth_date).toLocaleDateString('ru-RU')}</p>
+        <p><strong>Email:</strong> ${applicant.email || '-'}</p>
+        <p><strong>Телефон:</strong> ${applicant.phone || '-'}</p>
+        <p><strong>Адрес:</strong> ${applicant.address}</p>
+        <p><strong>Специальность:</strong> ${applicant.specialty_name} (${applicant.specialty_code})</p>
+        <p><strong>Дата подачи заявления:</strong> ${new Date(applicant.application_date).toLocaleDateString('ru-RU')}</p>
+      `;
+
+            // Экзамены
+            const examsTable = document.getElementById('exams-table');
+            if (exams.length === 0) {
+                examsTable.innerHTML = '<p>Нет назначенных экзаменов</p>';
+            } else {
+                examsTable.innerHTML = `
+          <table>
+            <thead>
+              <tr>
+                <th>Предмет</th>
+                <th>Дата и время</th>
+                <th>Аудитория</th>
+                <th>Балл</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${exams.map(exam => `
+                <tr>
+                  <td>${exam.subject_name}</td>
+                  <td>${new Date(exam.exam_date).toLocaleString('ru-RU')}</td>
+                  <td>${exam.room_number || '-'}</td>
+                  <td>${exam.score !== null ? exam.score : '-'}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        `;
+            }
+
+            // Итоговый балл
+            document.getElementById('total-score').textContent = data.totalScore || 0;
+        }
+
+        function reportError() {
+            const message = prompt('Опишите проблему:');
+            if (message) {
+                alert('Ваше сообщение отправлено секретарю. Спасибо за обратную связь!');
+                // В реальном приложении здесь был бы запрос к API для отправки сообщения
+            }
+        }
+    </script>
+</body>
+
+</html>

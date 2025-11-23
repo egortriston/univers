@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Приемная комиссия - Вход</title>
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+
+<body>
+    <div class="login-container">
+        <div class="login-card">
+            <h1 class="login-title">Приемная комиссия</h1>
+            <div id="alert-container"></div>
+
+            <div class="tabs">
+                <button class="tab active" data-tab="applicant">Абитуриент</button>
+                <button class="tab" data-tab="staff">Сотрудник</button>
+            </div>
+
+            <!-- Форма входа/регистрации для абитуриента -->
+            <div id="applicant-form" class="tab-content active">
+                <!-- Вход абитуриента -->
+                <div id="applicant-login" class="subtab-content active">
+                    <form id="applicant-login-form">
+                        <div class="form-group">
+                            <label class="form-label" for="applicant-email">Email</label>
+                            <input type="email" class="form-control" id="applicant-email" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="applicant-password">Пароль</label>
+                            <input type="password" class="form-control" id="applicant-password" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary" style="width: 100%;">Войти</button>
+                        <div
+                            style="text-align: center; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                            <a href="#" onclick="switchApplicantTab('register'); return false;"
+                                style="color: var(--primary-color); text-decoration: none; cursor: pointer;">Зарегистрироваться</a>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Регистрация абитуриента -->
+                <div id="applicant-register" class="subtab-content">
+                    <form id="applicant-register-form">
+                        <div class="form-group">
+                            <label class="form-label" for="reg-first-name">Имя *</label>
+                            <input type="text" class="form-control" id="reg-first-name" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="reg-last-name">Фамилия *</label>
+                            <input type="text" class="form-control" id="reg-last-name" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="reg-middle-name">Отчество</label>
+                            <input type="text" class="form-control" id="reg-middle-name">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="reg-birth-date">Дата рождения *</label>
+                            <input type="date" class="form-control" id="reg-birth-date" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="reg-passport">Паспортные данные *</label>
+                            <input type="text" class="form-control" id="reg-passport" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="reg-address">Адрес *</label>
+                            <textarea class="form-control" id="reg-address" required></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="reg-phone">Телефон</label>
+                            <input type="tel" class="form-control" id="reg-phone">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="reg-email">Email *</label>
+                            <input type="email" class="form-control" id="reg-email" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="reg-password">Пароль *</label>
+                            <input type="password" class="form-control" id="reg-password" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="reg-specialty">Специальность *</label>
+                            <select class="form-control" id="reg-specialty" required>
+                                <option value="">Загрузка...</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary" style="width: 100%;">Зарегистрироваться</button>
+                        <div
+                            style="text-align: center; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                            <a href="#" onclick="switchApplicantTab('login'); return false;"
+                                style="color: var(--primary-color); text-decoration: none; cursor: pointer;">Войти</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Форма входа/регистрации для сотрудника -->
+            <div id="staff-form" class="tab-content">
+                <!-- Вход сотрудника -->
+                <div id="staff-login" class="subtab-content active">
+                    <form id="staff-login-form">
+                        <div class="form-group">
+                            <label class="form-label" for="staff-email">Email</label>
+                            <input type="email" class="form-control" id="staff-email" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="staff-password">Пароль</label>
+                            <input type="password" class="form-control" id="staff-password" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary" style="width: 100%;">Войти</button>
+                        <div
+                            style="text-align: center; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                            <a href="#" onclick="switchStaffTab('register'); return false;"
+                                style="color: var(--primary-color); text-decoration: none; cursor: pointer;">Зарегистрироваться</a>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Регистрация сотрудника -->
+                <div id="staff-register" class="subtab-content">
+                    <form id="staff-register-form">
+                        <div class="form-group">
+                            <label class="form-label" for="reg-staff-first-name">Имя *</label>
+                            <input type="text" class="form-control" id="reg-staff-first-name" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="reg-staff-last-name">Фамилия *</label>
+                            <input type="text" class="form-control" id="reg-staff-last-name" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="reg-staff-middle-name">Отчество</label>
+                            <input type="text" class="form-control" id="reg-staff-middle-name">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="reg-staff-email">Email *</label>
+                            <input type="email" class="form-control" id="reg-staff-email" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="reg-staff-phone">Телефон</label>
+                            <input type="tel" class="form-control" id="reg-staff-phone">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="reg-staff-password">Пароль *</label>
+                            <input type="password" class="form-control" id="reg-staff-password" required>
+                        </div>
+                        <div class="alert alert-error" style="font-size: 0.875rem; padding: 0.75rem;">
+                            <strong>Внимание:</strong> Роли (Преподаватель/Секретарь) назначаются только секретарем
+                            через админ-панель после регистрации.
+                        </div>
+                        <button type="submit" class="btn btn-primary" style="width: 100%;">Зарегистрироваться</button>
+                        <div
+                            style="text-align: center; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                            <a href="#" onclick="switchStaffTab('login'); return false;"
+                                style="color: var(--primary-color); text-decoration: none; cursor: pointer;">Войти</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/api.js"></script>
+    <script src="/js/auth.js"></script>
+    <script>
+        let specialties = [];
+
+        // Загрузка специальностей для регистрации
+        async function loadSpecialties() {
+            try {
+                specialties = await API.getAuthSpecialties();
+                const select = document.getElementById('reg-specialty');
+                select.innerHTML = '<option value="">Выберите специальность</option>';
+                specialties.forEach(spec => {
+                    const option = document.createElement('option');
+                    option.value = spec.id;
+                    option.textContent = `${spec.name} (${spec.code})`;
+                    select.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Ошибка при загрузке специальностей:', error);
+                document.getElementById('reg-specialty').innerHTML = '<option value="">Ошибка загрузки</option>';
+            }
+        }
+
+        // Переключение вкладок (Абитуриент/Сотрудник)
+        document.querySelectorAll('.tab[data-tab]').forEach(tab => {
+            tab.addEventListener('click', () => {
+                const tabName = tab.dataset.tab;
+
+                document.querySelectorAll('.tab[data-tab]').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+
+                tab.classList.add('active');
+                document.getElementById(`${tabName}-form`).classList.add('active');
+
+                // При переключении на абитуриента загружаем специальности
+                if (tabName === 'applicant' && specialties.length === 0) {
+                    loadSpecialties();
+                }
+            });
+        });
+
+        // Переключение подвкладок для абитуриента
+        function switchApplicantTab(type) {
+            // Скрываем все подвкладки абитуриента
+            document.getElementById('applicant-login').classList.remove('active');
+            document.getElementById('applicant-register').classList.remove('active');
+
+            if (type === 'login') {
+                document.getElementById('applicant-login').classList.add('active');
+            } else {
+                document.getElementById('applicant-register').classList.add('active');
+                if (specialties.length === 0) {
+                    loadSpecialties();
+                }
+            }
+        }
+
+        // Переключение подвкладок для сотрудника
+        function switchStaffTab(type) {
+            // Скрываем все подвкладки сотрудника
+            document.getElementById('staff-login').classList.remove('active');
+            document.getElementById('staff-register').classList.remove('active');
+
+            if (type === 'login') {
+                document.getElementById('staff-login').classList.add('active');
+            } else {
+                document.getElementById('staff-register').classList.add('active');
+            }
+        }
+
+        // Вход абитуриента
+        document.getElementById('applicant-login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('applicant-email').value;
+            const password = document.getElementById('applicant-password').value;
+
+            try {
+                await API.loginApplicant(email, password);
+                window.location.href = '/applicant.html';
+            } catch (error) {
+                showAlert(error.message, 'error');
+            }
+        });
+
+        // Регистрация абитуриента
+        document.getElementById('applicant-register-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const middleName = document.getElementById('reg-middle-name').value.trim();
+            const phone = document.getElementById('reg-phone').value.trim();
+
+            const data = {
+                first_name: document.getElementById('reg-first-name').value.trim(),
+                last_name: document.getElementById('reg-last-name').value.trim(),
+                middle_name: middleName || null,
+                birth_date: document.getElementById('reg-birth-date').value,
+                passport_data: document.getElementById('reg-passport').value.trim(),
+                address: document.getElementById('reg-address').value.trim(),
+                phone: phone || null,
+                email: document.getElementById('reg-email').value.trim(),
+                password: document.getElementById('reg-password').value,
+                specialty_id: parseInt(document.getElementById('reg-specialty').value)
+            };
+
+            try {
+                const response = await API.registerApplicant(data);
+                showAlert('Регистрация успешна! Выполняется вход...', 'success');
+                setTimeout(() => {
+                    window.location.href = '/applicant.html';
+                }, 1000);
+            } catch (error) {
+                showAlert(error.message, 'error');
+            }
+        });
+
+        // Вход сотрудника
+        document.getElementById('staff-login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('staff-email').value;
+            const password = document.getElementById('staff-password').value;
+
+            try {
+                const response = await API.loginStaff(email, password);
+                const user = response.user;
+
+                if (user.is_secretary) {
+                    window.location.href = '/secretary/dashboard.html';
+                } else if (user.is_teacher) {
+                    window.location.href = '/teacher.html';
+                } else {
+                    showAlert('У вас нет доступа к системе', 'error');
+                }
+            } catch (error) {
+                showAlert(error.message, 'error');
+            }
+        });
+
+        // Регистрация сотрудника
+        document.getElementById('staff-register-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const middleName = document.getElementById('reg-staff-middle-name').value.trim();
+            const phone = document.getElementById('reg-staff-phone').value.trim();
+
+            const data = {
+                first_name: document.getElementById('reg-staff-first-name').value.trim(),
+                last_name: document.getElementById('reg-staff-last-name').value.trim(),
+                middle_name: middleName || null,
+                email: document.getElementById('reg-staff-email').value.trim(),
+                phone: phone || null,
+                password: document.getElementById('reg-staff-password').value,
+                is_teacher: false,
+                is_secretary: false
+            };
+
+            try {
+                const response = await API.registerStaff(data);
+                showAlert(response.message || 'Регистрация успешна! Ожидайте назначения роли секретарем для доступа к системе.', 'success');
+
+                setTimeout(() => {
+                    window.location.href = '/';
+                }, 3000);
+            } catch (error) {
+                showAlert(error.message, 'error');
+            }
+        });
+
+        function showAlert(message, type = 'error') {
+            const container = document.getElementById('alert-container');
+            container.innerHTML = `<div class="alert alert-${type}">${message}</div>`;
+            setTimeout(() => {
+                container.innerHTML = '';
+            }, 5000);
+        }
+
+        // Проверка авторизации
+        checkAuth().then(user => {
+            if (user) {
+                redirectByRole(user);
+            }
+        });
+    </script>
+</body>
+
+</html>
